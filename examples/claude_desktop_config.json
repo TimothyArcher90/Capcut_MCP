@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "capcut": {
+      "command": "D:\\CapCut_Studio\\_mcp\\.venv\\Scripts\\capcut-mcp.exe",
+      "args": [],
+      "env": {
+        "CAPCUT_STUDIO_ROOT": "D:\\CapCut_Studio",
+        "CAPCUT_DRAFTS_DIR": "C:\\Users\\TU_USUARIO\\AppData\\Local\\CapCut\\User Data\\Projects\\com.lveditor.draft"
+      }
+    }
+  }
+}

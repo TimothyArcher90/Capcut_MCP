@@ -1,0 +1,20 @@
+{
+  "canvas": "9:16",
+  "fps": 30,
+  "video": [
+    {"path": "D:/CapCut_Studio/Projects/2026-10-10_reel-lunes/01_Raw/video/toma1.mp4", "in": 0.0, "out": 4.2, "scale": 3.16},
+    {"path": "D:/CapCut_Studio/Projects/2026-10-10_reel-lunes/01_Raw/video/toma1.mp4", "in": 6.0, "out": 12.5, "scale": 3.16},
+    {"path": "D:/CapCut_Studio/Projects/2026-10-10_reel-lunes/02_Assets/images/grafico.png", "duration": 2.5}
+  ],
+  "overlay": [
+    {"path": "D:/CapCut_Studio/_Library/brand/logo.png", "start": 0, "duration": 13.2, "scale": 0.18, "x": 0.72, "y": 0.85}
+  ],
+  "audio": [
+    {"path": "D:/CapCut_Studio/_Library/music/beat.mp3", "start": 0, "volume": 0.15, "loop": true, "fade_in": 0.5, "fade_out": 1.5}
+  ],
+  "texts": [
+    {"text": "3 ERRORES QUE TE CUESTAN DINERO", "start": 0, "duration": 2.5, "size": 11, "y": 0.55, "color": "#FFE600", "background": "#000000"}
+  ],
+  "srt": "D:/CapCut_Studio/Projects/2026-10-10_reel-lunes/04_Subtitles/toma1.srt",
+  "caption_style": {"size": 8, "y": -0.6}
+}
