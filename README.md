@@ -43,7 +43,16 @@ D:\CapCut_Studio\
         └── project.json                  ← manifiesto + historial
 ```
 
-## Instalación (Windows)
+## Instalación rápida (Windows, un comando)
+
+En PowerShell:
+```powershell
+winget install Git.Git -e; git clone https://github.com/TimothyArcher90/Capcut_MCP.git D:\CapCut_Studio\_mcp; powershell -ExecutionPolicy Bypass -File D:\CapCut_Studio\_mcp\install.ps1
+```
+`install.ps1` instala lo que falte (Python, ffmpeg), crea el entorno, y registra el servidor en
+Claude Desktop (haciendo copia `.bak` de tu configuración). Luego reinicia Claude Desktop.
+
+## Instalación manual (Windows)
 
 1. **Python 3.10+** y **ffmpeg** en el PATH (`winget install Gyan.FFmpeg`).
 2. Instalar:
