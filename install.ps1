@@ -38,6 +38,10 @@ foreach ($dep in @(
 # 2) Código
 $McpDir = Join-Path $StudioRoot "_mcp"
 New-Item -ItemType Directory -Force -Path $StudioRoot | Out-Null
+# Evita el error "dubious ownership" de git en unidades como D:
+if (-not ((git config --global --get-all safe.directory) -contains ($McpDir -replace '\\','/'))) {
+    git config --global --add safe.directory ($McpDir -replace '\\','/')
+}
 if (Test-Path (Join-Path $McpDir ".git")) {
     Step "Actualizando repo en $McpDir"
     git -C $McpDir pull --ff-only
@@ -81,14 +85,16 @@ $server = [pscustomobject]@{
     env     = [pscustomobject]@{ CAPCUT_STUDIO_ROOT = $StudioRoot; CAPCUT_DRAFTS_DIR = $Drafts }
 }
 $json.mcpServers | Add-Member -NotePropertyName capcut -NotePropertyValue $server -Force
-$json | ConvertTo-Json -Depth 10 | Set-Content $Cfg -Encoding UTF8
+# UTF-8 SIN BOM: Windows PowerShell 5.1 añade BOM con -Encoding UTF8 y Claude Desktop puede no leerlo
+[IO.File]::WriteAllText($Cfg, ($json | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
 
 # 6) Prueba rápida
 Step "Comprobando instalación"
 & (Join-Path $Venv "Scripts\python.exe") -c "import capcut_mcp.server; print('capcut-mcp OK')"
 if (Has "claude") {
     Step "Registrando también en Claude Code"
-    claude mcp add capcut -- $Exe 2>$null
+    claude mcp remove capcut -s user 2>$null | Out-Null
+    claude mcp add capcut -s user -e "CAPCUT_STUDIO_ROOT=$StudioRoot" -e "CAPCUT_DRAFTS_DIR=$Drafts" -- $Exe
 }
 
 Write-Host ""
