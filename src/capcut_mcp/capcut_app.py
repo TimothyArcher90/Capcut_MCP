@@ -7,6 +7,11 @@ import subprocess
 from .config import IS_MAC, IS_WINDOWS, capcut_exe
 
 
+# CapCut no debe heredar stdin/stdout del servidor: en un MCP por stdio corrompería el protocolo
+# y haría que quien lanzó el proceso se quede esperando hasta que CapCut se cierre.
+_DETACHED = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
+
+
 def is_running() -> bool:
     try:
         if IS_WINDOWS:
@@ -23,9 +28,10 @@ def launch() -> str:
     if not exe:
         return "No encontré CapCut. Define CAPCUT_EXE con la ruta al ejecutable."
     if IS_MAC:
-        subprocess.Popen(["open", "-a", str(exe)])
+        subprocess.Popen(["open", "-a", str(exe)], **_DETACHED)
     else:
-        subprocess.Popen([str(exe)], creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        subprocess.Popen([str(exe)], creationflags=flags, **_DETACHED)
     return f"CapCut lanzado: {exe}"
 
 
