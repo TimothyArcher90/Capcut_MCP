@@ -52,8 +52,10 @@ if (Test-Path (Join-Path $McpDir ".git")) {
 
 # 3) Entorno virtual
 Step "Creando entorno virtual e instalando paquetes"
-$Venv = Join-Path $McpDir ".venv"
-if (-not (Test-Path $Venv)) { py -3 -m venv $Venv }
+# El entorno de Python va en el disco del sistema (C:): si D: es un disco USB/HDD, arrancar Python
+# desde ahí puede tardar >60 s y Claude da "timeout" al conectar el MCP.
+$Venv = Join-Path $env:USERPROFILE ".venvs\capcut-mcp"
+if (-not (Test-Path $Venv)) { New-Item -ItemType Directory -Force -Path (Split-Path $Venv) | Out-Null; py -3 -m venv $Venv }
 $Pip = Join-Path $Venv "Scripts\pip.exe"
 & $Pip install --upgrade pip | Out-Null
 $target = if ($NoExtras) { "." } else { ".[all]" }
