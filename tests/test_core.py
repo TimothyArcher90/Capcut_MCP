@@ -103,3 +103,23 @@ def test_auto_edit(studio, talking_clip, music_clip):
     assert Path(rep["draft_path"], "draft_content.json").exists()
     assert Path(rep["render"]).exists()
     assert p.manifest["drafts"][0]["name"] == rep["draft_path"].split("/")[-1].split("\\")[-1]
+
+
+@needs_ffmpeg
+def test_root_meta_registration(tmp_path, talking_clip):
+    root = tmp_path / "drafts"
+    root.mkdir()
+    existing = {"draft_fold_path": str(root / "1012 (1)"), "draft_id": "X", "draft_name": "1012 (1)",
+                "draft_json_file": "", "tm_draft_modified": 1, "tm_duration": 0, "draft_cover": "",
+                "draft_type": "", "draft_timeline_materials_size_": 0}
+    (root / "root_meta_info.json").write_text(json.dumps({"all_draft_store": [existing], "draft_ids": 1,
+                                                          "root_path": str(root)}))
+    d = Draft.new("test_mcp")
+    d.add_video(talking_clip)
+    d.save(root)
+    assert d.index_status == "registrado"
+    idx = json.loads((root / "root_meta_info.json").read_text())
+    assert [e["draft_name"] for e in idx["all_draft_store"]] == ["test_mcp", "1012 (1)"]
+    assert idx["draft_ids"] == 2 and "draft_type" in idx["all_draft_store"][0]
+    d.save(root, overwrite=True)  # no duplica
+    assert len(json.loads((root / "root_meta_info.json").read_text())["all_draft_store"]) == 2

@@ -76,3 +76,62 @@ def doctor(drafts_root: Path | None) -> dict:
                                        "capcut_draft_create) pero no se pueden leer/editar los creados por "
                                        "CapCut. Alternativa garantizada: capcut_render (render directo con ffmpeg).",
             }[status]}
+
+
+ROOT_META = "root_meta_info.json"
+
+
+def register_in_root_meta(drafts_root: Path, folder: Path, meta: dict) -> str:
+    """Añade/actualiza el borrador en el índice root_meta_info.json que usa CapCut para listar proyectos.
+
+    Algunas versiones de CapCut sólo muestran los borradores que figuran en este índice. Su formato no
+    está documentado, así que se CLONA una entrada existente (creada por tu propia CapCut) y sólo se
+    sustituyen los campos conocidos. CapCut debe estar cerrado: al salir reescribe este archivo.
+    """
+    import shutil
+    import time
+
+    idx_path = Path(drafts_root) / ROOT_META
+    if not idx_path.exists():
+        return "sin_indice"
+    try:
+        idx = json.loads(idx_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return "indice_ilegible"
+    store_key = next((k for k, v in idx.items() if isinstance(v, list) and k.endswith("draft_store")), None)
+    if not store_key:
+        return "formato_desconocido"
+    store = idx[store_key]
+    fold = str(folder).replace("\\", "/")
+    existing = next((e for e in store if str(e.get("draft_fold_path", "")).replace("\\", "/") == fold), None)
+    base = dict(existing or (store[0] if store else {}))
+    content_file = next((folder / f for f in ("draft_content.json", "draft_info.json") if (folder / f).exists()), None)
+    known = {
+        "draft_fold_path": fold,
+        "draft_id": meta.get("draft_id"),
+        "draft_name": meta.get("draft_name"),
+        "draft_root_path": str(drafts_root).replace("\\", "/"),
+        "draft_json_file": str(content_file).replace("\\", "/") if content_file else "",
+        "tm_draft_create": meta.get("tm_draft_create"),
+        "tm_draft_modified": meta.get("tm_draft_modified"),
+        "tm_duration": meta.get("tm_duration"),
+        "draft_cover": str(folder / "draft_cover.jpg").replace("\\", "/"),
+        "draft_is_invisible": False,
+        "draft_is_cloud_temp_draft": False,
+        "draft_cloud_last_action_download": False,
+        "streaming_edit_draft_ready": True,
+    }
+    for k, v in known.items():
+        if k in base or not store:
+            base[k] = v
+    for k in ("draft_fold_path", "draft_id", "draft_name", "draft_json_file", "tm_draft_modified", "tm_duration"):
+        base[k] = known[k]
+    shutil.copy2(idx_path, idx_path.with_name(f"{ROOT_META}.bak-{time.strftime('%Y%m%d-%H%M%S')}"))
+    if existing:
+        store[store.index(existing)] = base
+    else:
+        store.insert(0, base)
+    if "draft_ids" in idx and isinstance(idx["draft_ids"], int):
+        idx["draft_ids"] = len(store)
+    idx_path.write_text(json.dumps(idx, ensure_ascii=False), encoding="utf-8")
+    return "registrado"

@@ -471,6 +471,8 @@ class Draft:
             "draft_materials": self._meta_materials(),
         })
         meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        from .store import register_in_root_meta
+        self.index_status = register_in_root_meta(drafts_root, folder, meta)
         return folder
 
     def _meta_materials(self) -> list[dict]:

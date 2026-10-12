@@ -58,7 +58,20 @@ $Pip = Join-Path $Venv "Scripts\pip.exe"
 & $Pip install --upgrade pip | Out-Null
 $target = if ($NoExtras) { "." } else { ".[all]" }
 Push-Location $McpDir; & $Pip install -e $target; Pop-Location
-$Exe = Join-Path $Venv "Scripts\capcut-mcp.exe"
+$Py = Join-Path $Venv "Scripts\python.exe"
+# Se arranca con "python -m capcut_mcp.server" en vez de capcut-mcp.exe: los antivirus suelen
+# bloquear ese lanzador .exe que genera pip (acceso denegado / arranque lento -> timeout).
+$ServerArgs = @("-m", "capcut_mcp.server")
+
+# Exclusión de Windows Defender para la carpeta del servidor (requiere PowerShell como administrador)
+$IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($IsAdmin) {
+    try { Add-MpPreference -ExclusionPath $McpDir -ErrorAction Stop; Step "Exclusión de Defender añadida: $McpDir" }
+    catch { Write-Host "No pude añadir la exclusión de Defender: $_" -ForegroundColor Yellow }
+} else {
+    Write-Host "Consejo: ejecuta como administrador para excluir $McpDir del antivirus (arranque más rápido)." -ForegroundColor Yellow
+}
 
 # Precompila todo: el primer arranque en Windows (antivirus + compilación .pyc) puede superar
 # el tiempo de espera de Claude y dar "timeout" al conectar el MCP.
@@ -88,8 +101,8 @@ if (-not $json.PSObject.Properties["mcpServers"]) {
     $json | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{})
 }
 $server = [pscustomobject]@{
-    command = $Exe
-    args    = @()
+    command = $Py
+    args    = $ServerArgs
     env     = [pscustomobject]@{ CAPCUT_STUDIO_ROOT = $StudioRoot; CAPCUT_DRAFTS_DIR = $Drafts }
 }
 $json.mcpServers | Add-Member -NotePropertyName capcut -NotePropertyValue $server -Force
@@ -102,7 +115,7 @@ Step "Comprobando instalación"
 if (Has "claude") {
     Step "Registrando también en Claude Code"
     claude mcp remove capcut -s user 2>$null | Out-Null
-    claude mcp add capcut -s user -e "CAPCUT_STUDIO_ROOT=$StudioRoot" -e "CAPCUT_DRAFTS_DIR=$Drafts" -- $Exe
+    claude mcp add capcut -s user -e "CAPCUT_STUDIO_ROOT=$StudioRoot" -e "CAPCUT_DRAFTS_DIR=$Drafts" -- $Py -m capcut_mcp.server
 }
 
 Write-Host ""

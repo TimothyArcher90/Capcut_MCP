@@ -69,13 +69,14 @@ Claude Desktop (haciendo copia `.bak` de tu configuración). Luego reinicia Clau
    {
      "mcpServers": {
        "capcut": {
-         "command": "D:\\CapCut_Studio\\_mcp\\.venv\\Scripts\\capcut-mcp.exe",
+         "command": "D:\\CapCut_Studio\\_mcp\\.venv\\Scripts\\python.exe",
+         "args": ["-m", "capcut_mcp.server"],
          "env": { "CAPCUT_STUDIO_ROOT": "D:\\CapCut_Studio" }
        }
      }
    }
    ```
-   Con **Claude Code**: `claude mcp add capcut -- D:\CapCut_Studio\_mcp\.venv\Scripts\capcut-mcp.exe`
+   Con **Claude Code**: `claude mcp add capcut -s user -- D:\CapCut_Studio\_mcp\.venv\Scripts\python.exe -m capcut_mcp.server`
 4. Reinicia Claude y pide: *“Ejecuta capcut_status”*.
 
 ### Variables de entorno
