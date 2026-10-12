@@ -36,8 +36,18 @@ def transcribe(path: str | Path, language: str | None = None, model: str = "smal
         raise RuntimeError(
             "faster-whisper no está instalado. Ejecuta: pip install \"capcut-mcp[transcribe]\""
         ) from e
-    compute = "int8"
-    wm = WhisperModel(model, device=device, compute_type=compute)
+    try:
+        return _run_whisper(WhisperModel, path, language, model, device)
+    except RuntimeError as e:
+        # device="auto" elige CUDA si hay GPU NVIDIA aunque falten cuBLAS/cuDNN; el fallo sólo
+        # aparece al decodificar. En ese caso se repite en CPU.
+        if device == "cpu" or not re.search(r"cuda|cublas|cudnn", str(e), re.I):
+            raise
+        return _run_whisper(WhisperModel, path, language, model, "cpu")
+
+
+def _run_whisper(whisper_model, path, language, model, device) -> tuple[list[Word], str]:
+    wm = whisper_model(model, device=device, compute_type="int8")
     segments, info = wm.transcribe(str(path), language=language, word_timestamps=True, vad_filter=True)
     words: list[Word] = []
     for seg in segments:
