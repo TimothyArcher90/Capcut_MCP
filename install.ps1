@@ -60,6 +60,14 @@ $target = if ($NoExtras) { "." } else { ".[all]" }
 Push-Location $McpDir; & $Pip install -e $target; Pop-Location
 $Exe = Join-Path $Venv "Scripts\capcut-mcp.exe"
 
+# Precompila todo: el primer arranque en Windows (antivirus + compilación .pyc) puede superar
+# el tiempo de espera de Claude y dar "timeout" al conectar el MCP.
+Step "Precompilando (evita timeout en el primer arranque)"
+& (Join-Path $Venv "Scripts\python.exe") -m compileall -q $Venv $McpDir\src | Out-Null
+
+# Más margen de arranque para servidores MCP en Claude Code (milisegundos)
+[Environment]::SetEnvironmentVariable("MCP_TIMEOUT", "60000", "User")
+
 # 4) Carpeta de borradores de CapCut
 $Drafts = Join-Path $env:LOCALAPPDATA "CapCut\User Data\Projects\com.lveditor.draft"
 if (-not (Test-Path $Drafts)) {
